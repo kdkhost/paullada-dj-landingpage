@@ -1,0 +1,19 @@
+﻿<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteRule ^api(/|$) index.php [L]
+    RewriteRule ^admin(/|$) index.php [L]
+    RewriteRule ^password(/|$) index.php [L]
+    RewriteRule ^register(/|$) index.php [L]
+    RewriteRule ^home(/|$) index.php [L]
+
+    RewriteRule ^vendor/(.*)$ vendor.php?path=$1 [L,QSA]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.html [L]
+</IfModule>
+
+AddHandler application/x-httpd-php84 .php
+
+DirectoryIndex index.html

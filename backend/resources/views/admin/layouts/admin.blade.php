@@ -11,6 +11,7 @@
 
 @section('css')
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="/paullada-admin.css">
     @stack('styles')
 @stop
 
