@@ -1,0 +1,35 @@
+# Laravel
+/backend/vendor/
+/backend/.env
+/backend/.env.*
+/backend/storage/framework/cache/data/*
+/backend/storage/framework/sessions/*
+/backend/storage/framework/views/*
+/backend/storage/logs/*
+/backend/node_modules/
+/backend/public/storage/
+/backend/public/hot
+/backend/public/build/
+
+# Next.js
+/frontend/.next/
+/frontend/out/
+/frontend/node_modules/
+
+# Graphify
+/graphify-out/
+
+# IDE
+/.idea/
+/.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Deploy
+/public_html/
+/backend/vendor/
