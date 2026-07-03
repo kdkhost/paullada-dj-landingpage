@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 return [
 
@@ -254,4 +254,3 @@ return [
 
     'livewire' => false,
 ];
-
