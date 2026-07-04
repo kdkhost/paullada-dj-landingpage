@@ -28,14 +28,15 @@ function formatPrice(price: number | null): string {
   });
 }
 
-const statusConfig: Record<
-  Show["status"],
-  { label: string; class: string }
-> = {
+const statusConfig: Record<string, { label: string; class: string }> = {
   disponivel: { label: "Disponível", class: "bg-green-500/20 text-green-400 border-green-500/30" },
   esgotado: { label: "Esgotado", class: "bg-red-500/20 text-red-400 border-red-500/30" },
   realizado: { label: "Realizado", class: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30" },
 };
+
+function getStatus(status: string) {
+  return statusConfig[status] ?? { label: status, class: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30" };
+}
 
 function useScrollReveal() {
   const [revealed, setRevealed] = useState(false);
@@ -91,7 +92,7 @@ export default function Shows() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {shows.map((show) => {
-              const status = statusConfig[show.status];
+              const status = getStatus(show.status);
               return (
                 <div key={show.id} className="glass-card group rounded-2xl overflow-hidden">
                   <div className="p-6">

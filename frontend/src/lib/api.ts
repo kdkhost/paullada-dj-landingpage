@@ -53,16 +53,45 @@ async function fetchAPI<T>(endpoint: string): Promise<T> {
   }
 }
 
+function mapStatus(status: string): Show["status"] {
+  if (status === "active" || status === "disponivel") return "disponivel";
+  if (status === "esgotado") return "esgotado";
+  return "realizado";
+}
+
 export async function fetchShows(): Promise<Show[]> {
-  return fetchAPI<Show[]>("/api/shows");
+  const raw = await fetchAPI<Record<string, unknown>[]>("/api/shows");
+  return raw.map((r) => ({
+    id: r.id as number,
+    date: (r.data_evento || r.date || "") as string,
+    time: (r.hora_evento || r.time || "") as string,
+    venue: (r.local || r.venue || "") as string,
+    city: (r.cidade || r.city || "") as string,
+    ticket_price: r.preco_ingresso != null ? Number(r.preco_ingresso) : (r.ticket_price as number | null),
+    ticket_url: (r.link_ingresso || r.ticket_url || null) as string | null,
+    status: mapStatus((r.status as string) || "active"),
+  }));
 }
 
 export async function fetchGallery(): Promise<GalleryItem[]> {
-  return fetchAPI<GalleryItem[]>("/api/gallery");
+  const raw = await fetchAPI<Record<string, unknown>[]>("/api/gallery");
+  return raw.map((r) => ({
+    id: r.id as number,
+    type: ((r.type || r.tipo) as "foto" | "video") || "foto",
+    url: (r.url || r.arquivo || "") as string,
+    thumbnail: (r.thumbnail || r.foto_capa || null) as string | null,
+    title: (r.title || r.titulo || null) as string | null,
+  }));
 }
 
 export async function fetchSocialLinks(): Promise<SocialLink[]> {
-  return fetchAPI<SocialLink[]>("/api/social-links");
+  const raw = await fetchAPI<Record<string, unknown>[]>("/api/social-links");
+  return raw.map((r) => ({
+    id: r.id as number,
+    platform: (r.platform || r.plataforma || "") as string,
+    url: (r.url || "") as string,
+    icon: (r.icon || r.icone || null) as string | null,
+  }));
 }
 
 export async function fetchSettings(): Promise<SiteSettings | null> {
