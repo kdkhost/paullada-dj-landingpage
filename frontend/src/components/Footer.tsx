@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { FaChevronUp, FaInstagram, FaWhatsapp, FaYoutube, FaFacebook, FaTiktok, FaSpotify, FaSoundcloud } from "react-icons/fa6";
 import { fetchSocialLinks, type SocialLink } from "@/lib/api";
 
@@ -58,8 +59,9 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="flex flex-col items-center gap-8 md:flex-row md:justify-between">
           <div className="text-center md:text-left">
-            <a href="#" className="font-heading text-xl tracking-widest text-accent">
-              <span className="text-gold">&#9835;</span> Paullada DJ
+            <a href="#" className="flex items-center gap-2 font-heading text-xl tracking-widest text-accent">
+              <Image src="/images/logo.png" alt="Paullada DJ" width={28} height={28} className="h-7 w-auto" />
+              Paullada DJ
             </a>
             <p className="mt-2 text-xs tracking-[0.2em] uppercase text-zinc-600">
               O Melhor do Flashback

@@ -33,3 +33,11 @@ Thumbs.db
 # Deploy
 /public_html/
 /backend/vendor/
+
+# Debug output
+/*.json
+/*.txt
+/*.html
+/*.css
+/cc*.php
+/seed.php

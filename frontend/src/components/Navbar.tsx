@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { FaBars, FaXmark, FaInstagram } from "react-icons/fa6";
 
 const links = [
@@ -36,7 +37,7 @@ export default function Navbar() {
           href="#"
           className="flex items-center gap-2 text-lg font-heading tracking-widest text-accent"
         >
-          <span className="text-gold text-xl">&#9835;</span>
+          <Image src="/images/logo.png" alt="Paullada DJ" width={32} height={32} className="h-8 w-auto" />
           Paullada DJ
         </a>
 
@@ -54,7 +55,7 @@ export default function Navbar() {
             href="https://www.instagram.com/paulladadjrj"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-full bg-gradient-to-r from-neon-orange to-secondary px-5 py-2 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-secondary/40"
+            className="flex items-center gap-2 rounded-full bg-gradient-to-r from-logo-gold to-gold px-5 py-2 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-gold/40"
           >
             <FaInstagram />
             Instagram
@@ -86,7 +87,7 @@ export default function Navbar() {
               href="https://www.instagram.com/paulladadjrj"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-full bg-gradient-to-r from-neon-orange to-secondary px-5 py-2 text-sm font-semibold text-white"
+              className="flex items-center gap-2 rounded-full bg-gradient-to-r from-logo-gold to-gold px-5 py-2 text-sm font-semibold text-white"
             >
               <FaInstagram />
               Instagram

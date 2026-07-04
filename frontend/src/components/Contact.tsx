@@ -207,7 +207,7 @@ export default function Contact() {
                       rel="noopener noreferrer"
                       className="flex items-center gap-3 rounded-xl border border-zinc-700/50 p-3 text-sm text-zinc-300 transition-all hover:border-accent/30 hover:text-accent"
                     >
-                      <FaInstagram className="text-lg text-neon-orange" />
+                      <FaInstagram className="text-lg text-logo-gold" />
                       Instagram
                     </a>
                     <a
@@ -263,12 +263,12 @@ export default function Contact() {
                 )}
                 {settings?.instagram && (
                   <div className="flex items-center gap-3">
-                    <FaInstagram className="shrink-0 text-neon-orange" />
+                    <FaInstagram className="shrink-0 text-logo-gold" />
                     <a
                       href={`https://instagram.com/${settings.instagram.replace("@", "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:text-neon-orange transition-colors"
+                      className="hover:text-logo-gold transition-colors"
                     >
                       {settings.instagram}
                     </a>

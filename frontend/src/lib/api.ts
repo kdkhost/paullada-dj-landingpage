@@ -32,6 +32,9 @@ export interface SiteSettings {
   whatsapp: string | null;
   email: string | null;
   phone: string | null;
+  hero_bg_type: "gradient" | "image" | "video" | null;
+  hero_bg_image: string | null;
+  hero_bg_video: string | null;
 }
 
 export interface TrackEventPayload {

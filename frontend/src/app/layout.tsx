@@ -68,6 +68,9 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="font-body bg-dark text-white antialiased">
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){var p=document.getElementById('preloader');if(p){var h=function(){p.classList.add('hidden')};setTimeout(h,3000);window.addEventListener('load',function(){setTimeout(h,800)})}})()`
+        }} />
         <AnalyticsProvider>
           {children}
           <AnalyticsTracker />

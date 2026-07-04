@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { FaMusic, FaHeadphones, FaCompactDisc } from "react-icons/fa6";
 
 const stats = [
@@ -109,8 +110,8 @@ export default function About() {
               <div className="absolute inset-0 rounded-2xl border border-neon-purple/20 bg-gradient-to-br from-neon-purple/10 to-transparent animate-glow" />
               <div className="absolute inset-4 flex items-center justify-center rounded-2xl bg-gradient-to-br from-dark-2 to-dark-3">
                 <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-neon-orange to-secondary shadow-lg shadow-secondary/30">
-                    <span className="font-heading text-4xl font-bold text-white">DJ</span>
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-logo-gold to-gold shadow-lg shadow-gold/30">
+                    <Image src="/images/logo.png" alt="Paullada DJ" width={80} height={80} className="h-20 w-20 rounded-full object-cover" />
                   </div>
                   <div>
                     <p className="font-heading text-2xl font-bold text-accent">Paullada</p>
