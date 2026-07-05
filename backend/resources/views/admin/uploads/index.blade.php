@@ -1,350 +1,489 @@
 @extends('adminlte::page')
 
-@section('title', 'Upload de Arquivos')
+@section('title', 'Gerenciador de Mídia')
 
 @section('content_header')
-    <h1><i class="fas fa-cloud-upload-alt text-primary"></i> Upload de Arquivos</h1>
+    <div class="d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-photo-video text-primary"></i> Gerenciador de Mídia</h1>
+        <div class="btn-group">
+            <button type="button" class="btn btn-danger btn-sm" id="btnExcluirSelecionados" disabled>
+                <i class="fas fa-trash"></i> Excluir Selecionados (<span id="countSelecionados">0</span>)
+            </button>
+        </div>
+    </div>
 @stop
 
 @section('content')
+
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-lg-8">
         <div class="card card-primary card-outline">
             <div class="card-header">
-                <h3 class="card-title">Arraste e solte ou clique para enviar</h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                        <i class="fas fa-minus"></i>
-                    </button>
-                </div>
+                <h3 class="card-title"><i class="fas fa-cloud-upload-alt"></i> Enviar Arquivos</h3>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="fileInput" multiple style="display:none" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt">
                     <div class="upload-zone-content">
-                        <i class="fas fa-cloud-upload-alt fa-4x text-muted mb-3"></i>
-                        <h4>Arraste arquivos aqui</h4>
-                        <p class="text-muted">ou clique para selecionar</p>
-                        <p class="text-muted small">
-                            <i class="fas fa-image"></i> Imagens (JPG, PNG, GIF, WEBP) |
-                            <i class="fas fa-video"></i> Vídeos (MP4, WEBM) |
-                            <i class="fas fa-music"></i> Músicas (MP3, WAV, OGG)
-                        </p>
-                        <p class="text-muted small">Tamanho máximo: 200MB por arquivo</p>
-                        <input type="file" id="fileInput" accept="image/*,video/*,audio/*" multiple style="display:none">
+                        <div class="upload-zone-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h4 class="upload-zone-title">Arraste seus arquivos aqui</h4>
+                        <p class="upload-zone-subtitle">ou clique para selecionar do computador</p>
+                        <div class="upload-zone-formats">
+                            <span class="format-badge format-image"><i class="fas fa-image"></i> Imagens</span>
+                            <span class="format-badge format-video"><i class="fas fa-video"></i> Vídeos</span>
+                            <span class="format-badge format-audio"><i class="fas fa-music"></i> Áudios</span>
+                            <span class="format-badge format-doc"><i class="fas fa-file"></i> Documentos</span>
+                        </div>
+                        <p class="upload-zone-limit">Máximo 200MB por arquivo</p>
                     </div>
                 </div>
 
-                <div id="uploadProgress" style="display:none;" class="mt-3"></div>
+                <div id="uploadQueue" class="p-3" style="display:none"></div>
             </div>
         </div>
 
         <div class="card card-secondary card-outline">
             <div class="card-header">
-                <h3 class="card-title">Arquivos Enviados</h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                        <i class="fas fa-minus"></i>
-                    </button>
+                <h3 class="card-title"><i class="fas fa-folder-open"></i> Biblioteca de Mídia</h3>
+                <div class="card-tools d-flex align-items-center gap-2">
+                    <div class="btn-group btn-group-sm mr-2">
+                        <button type="button" class="btn btn-outline-secondary filter-btn active" data-tipo="">Todos</button>
+                        <button type="button" class="btn btn-outline-info filter-btn" data-tipo="imagem"><i class="fas fa-image"></i></button>
+                        <button type="button" class="btn btn-outline-success filter-btn" data-tipo="video"><i class="fas fa-video"></i></button>
+                        <button type="button" class="btn btn-outline-warning filter-btn" data-tipo="audio"><i class="fas fa-music"></i></button>
+                    </div>
+                    <div class="input-group input-group-sm" style="width:200px">
+                        <input type="text" class="form-control" id="buscaMedia" placeholder="Buscar arquivo...">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" id="btnBuscar"><i class="fas fa-search"></i></button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Preview</th>
-                            <th>Nome</th>
-                            <th>Tipo</th>
-                            <th>Tamanho</th>
-                            <th>Data</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="arquivosEnviados">
-                        <tr id="semArquivos">
-                            <td colspan="6" class="text-center text-muted">Nenhum arquivo enviado ainda</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="card-body p-0">
+                <div id="mediaGrid" class="media-grid">
+                    <div class="text-center p-5" id="mediaLoading">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">Carregando mídia...</p>
+                    </div>
+                </div>
+                <div id="mediaPagination" class="d-flex justify-content-center p-3"></div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-lg-4">
         <div class="card card-info card-outline">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-info-circle"></i> Informações</h3>
+                <h3 class="card-title"><i class="fas fa-chart-pie"></i> Estatísticas</h3>
             </div>
             <div class="card-body">
-                <div class="info-box bg-info">
-                    <span class="info-box-icon"><i class="fas fa-image"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Imagens</span>
-                        <span class="info-box-number" id="countImagens">0</span>
+                <div class="stat-item">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-image text-info"></i> Imagens</span>
+                        <span class="badge badge-info" id="statImagens">{{ $totalImagens }}</span>
+                    </div>
+                    <div class="progress progress-sm mb-3" style="height:4px">
+                        <div class="progress-bar bg-info" id="barImagens" style="width:0%"></div>
                     </div>
                 </div>
-                <div class="info-box bg-success">
-                    <span class="info-box-icon"><i class="fas fa-video"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Vídeos</span>
-                        <span class="info-box-number" id="countVideos">0</span>
+                <div class="stat-item">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-video text-success"></i> Vídeos</span>
+                        <span class="badge badge-success" id="statVideos">{{ $totalVideos }}</span>
+                    </div>
+                    <div class="progress progress-sm mb-3" style="height:4px">
+                        <div class="progress-bar bg-success" id="barVideos" style="width:0%"></div>
                     </div>
                 </div>
-                <div class="info-box bg-warning">
-                    <span class="info-box-icon"><i class="fas fa-music"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Músicas</span>
-                        <span class="info-box-number" id="countMusicas">0</span>
+                <div class="stat-item">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-music text-warning"></i> Áudios</span>
+                        <span class="badge badge-warning" id="statAudios">{{ $totalAudios }}</span>
+                    </div>
+                    <div class="progress progress-sm mb-3" style="height:4px">
+                        <div class="progress-bar bg-warning" id="barAudios" style="width:0%"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-file text-secondary"></i> Documentos</span>
+                        <span class="badge badge-secondary" id="statDocs">{{ $totalDocumentos }}</span>
+                    </div>
+                    <div class="progress progress-sm mb-3" style="height:4px">
+                        <div class="progress-bar bg-secondary" id="barDocs" style="width:0%"></div>
                     </div>
                 </div>
                 <hr>
-                <p class="text-muted small mb-0">
-                    <i class="fas fa-database"></i> Espaço utilizado: <span id="espacoUtilizado">0 MB</span>
-                </p>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted"><i class="fas fa-database"></i> Espaço usado</span>
+                    <strong class="text-white" id="statEspaco">{{ number_format($espacoUsado / 1048576, 2, ',', '.') }} MB</strong>
+                </div>
             </div>
         </div>
 
         <div class="card card-dark card-outline">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-cog"></i> Atalhos</h3>
+                <h3 class="card-title"><i class="fas fa-lightbulb"></i> Dicas</h3>
             </div>
-            <div class="card-body">
-                <a href="{{ route('admin.gallery.create') }}" class="btn btn-app bg-success">
-                    <i class="fas fa-plus-circle"></i> Add à Galeria
-                </a>
-                <a href="{{ route('admin.gallery.index') }}" class="btn btn-app bg-primary">
-                    <i class="fas fa-images"></i> Galeria
-                </a>
+            <div class="card-body p-2">
+                <ul class="list-unstyled mb-0" style="font-size:13px">
+                    <li class="py-1"><i class="fas fa-check text-success"></i> Arraste vários arquivos de uma vez</li>
+                    <li class="py-1"><i class="fas fa-check text-success"></i> Clique no arquivo para copiar a URL</li>
+                    <li class="py-1"><i class="fas fa-check text-success"></i> Use os filtros para encontrar rápido</li>
+                    <li class="py-1"><i class="fas fa-check text-success"></i> Selecione vários para excluir em lote</li>
+                </ul>
             </div>
         </div>
     </div>
 </div>
 
 <div class="modal fade" id="previewModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content bg-dark">
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-white" id="previewTitle"></h5>
-                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="background:#0d1117;border:1px solid #30363d">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title text-white" id="previewTitle">Preview</h5>
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-info mr-2" id="btnCopiarUrlModal">
+                        <i class="fas fa-link"></i> Copiar URL
+                    </button>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
             </div>
-            <div class="modal-body text-center" id="previewBody">
+            <div class="modal-body text-center p-0" id="previewBody"></div>
+            <div class="modal-footer border-top border-secondary justify-content-between">
+                <small class="text-muted" id="previewInfo"></small>
+                <div>
+                    <button class="btn btn-sm btn-outline-danger" id="btnExcluirModal"><i class="fas fa-trash"></i> Excluir</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
 @stop
 
 @section('css')
 <style>
 .upload-zone {
-    border: 3px dashed #6c757d;
-    border-radius: 15px;
-    padding: 50px 20px;
+    border: 3px dashed #30363d;
+    border-radius: 0;
+    padding: 60px 20px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: #1a1a2e;
+    background: #0d1117;
+    margin: 0;
 }
-.upload-zone:hover, .upload-zone.drag-over {
-    border-color: #00d2ff;
-    background: #16213e;
-    transform: scale(1.01);
-}
+.upload-zone:hover { border-color: #BB9C55; background: #161b22; }
 .upload-zone.drag-over {
-    border-color: #00d2ff;
-    box-shadow: 0 0 30px rgba(0, 210, 255, 0.3);
+    border-color: #22D3EE;
+    background: #0d2137;
+    box-shadow: inset 0 0 60px rgba(34,211,238,0.1);
 }
-.upload-progress-item {
-    background: #1a1a2e;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 12px;
-    border-left: 4px solid #00d2ff;
+.upload-zone-icon {
+    font-size: 64px;
+    color: #30363d;
+    margin-bottom: 16px;
     transition: all 0.3s;
 }
-.upload-progress-item .progress {
-    height: 6px;
-    background: #2a2a4e;
-    border-radius: 3px;
+.upload-zone:hover .upload-zone-icon { color: #BB9C55; }
+.upload-zone.drag-over .upload-zone-icon { color: #22D3EE; transform: scale(1.1); }
+.upload-zone-title { color: #e6edf3; font-weight: 600; margin-bottom: 8px; }
+.upload-zone-subtitle { color: #8b949e; margin-bottom: 16px; }
+.upload-zone-formats { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+.format-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid #30363d;
+    color: #8b949e;
 }
-.upload-progress-item .progress-bar {
-    background: linear-gradient(90deg, #00d2ff, #9b59b6);
-    border-radius: 3px;
-    transition: width 0.3s ease;
-}
-.upload-preview-thumb {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
+.format-image:hover { border-color: #22D3EE; color: #22D3EE; }
+.format-video:hover { border-color: #3fb950; color: #3fb950; }
+.format-audio:hover { border-color: #d29922; color: #d29922; }
+.format-doc:hover { border-color: #8b949e; color: #e6edf3; }
+.upload-zone-limit { color: #484f58; font-size: 12px; margin: 0; }
+
+.upload-queue-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #161b22;
+    border: 1px solid #21262d;
     border-radius: 8px;
-    cursor: pointer;
-    transition: transform 0.2s;
+    margin-bottom: 8px;
+    animation: slideIn 0.3s ease;
 }
-.upload-preview-thumb:hover {
-    transform: scale(1.1);
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-.upload-preview-icon {
-    width: 60px;
-    height: 60px;
+.upload-queue-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #21262d;
+}
+.upload-queue-icon {
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #2a2a4e;
-    border-radius: 8px;
-    font-size: 24px;
-    cursor: pointer;
+    border-radius: 6px;
+    flex-shrink: 0;
+    font-size: 20px;
 }
-.upload-status {
-    font-size: 12px;
-    padding: 3px 8px;
-    border-radius: 4px;
+.upload-queue-info { flex: 1; min-width: 0; }
+.upload-queue-name {
+    color: #e6edf3;
+    font-weight: 500;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.upload-status.success { background: #28a74520; color: #28a745; }
-.upload-status.error { background: #dc354520; color: #dc3545; }
-.upload-status.uploading { background: #00d2ff20; color: #00d2ff; }
-.time-remaining {
+.upload-queue-meta { color: #8b949e; font-size: 11px; margin-top: 2px; }
+.upload-queue-progress {
+    height: 4px;
+    background: #21262d;
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+}
+.upload-queue-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #BB9C55, #22D3EE);
+}
+.upload-queue-status {
     font-size: 11px;
-    color: #6c757d;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
+.status-uploading { background: rgba(34,211,238,0.15); color: #22D3EE; }
+.status-success { background: rgba(63,185,80,0.15); color: #3fb950; }
+.status-error { background: rgba(248,81,73,0.15); color: #f85149; }
+
+.media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    padding: 16px;
+}
+.media-card {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #161b22;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    aspect-ratio: 1;
+}
+.media-card:hover { border-color: #30363d; transform: translateY(-2px); }
+.media-card.selected { border-color: #BB9C55; }
+.media-card input[type="checkbox"] {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.media-card:hover input[type="checkbox"],
+.media-card.selected input[type="checkbox"] { opacity: 1; }
+.media-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.media-card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.media-card:hover .media-card-overlay { opacity: 1; }
+.media-card-name {
+    color: #e6edf3;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.media-card-size { color: #8b949e; font-size: 10px; }
+.media-card-type {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    z-index: 1;
+}
+.type-imagem { background: rgba(34,211,238,0.9); color: #0d1117; }
+.type-video { background: rgba(63,185,80,0.9); color: #0d1117; }
+.type-audio { background: rgba(210,153,34,0.9); color: #0d1117; }
+.type-documento { background: rgba(139,148,158,0.9); color: #0d1117; }
+.media-card-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    background: #21262d;
+}
+.media-card-actions {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    z-index: 2;
+}
+.media-card-actions .btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 11px;
+    opacity: 0;
+    transition: all 0.2s;
+}
+.media-card:hover .media-card-actions .btn { opacity: 1; }
+.media-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: #484f58;
+}
+.pagination .page-link { background: #161b22; border-color: #30363d; color: #8b949e; }
+.pagination .page-item.active .page-link { background: #BB9C55; border-color: #BB9C55; color: #fff; }
+.pagination .page-link:hover { background: #21262d; color: #e6edf3; }
 </style>
 @stop
 
 @section('js')
 <script>
 $(function() {
-    let arquivosEnviados = [];
-    let uploadsAtivos = 0;
+    let currentFilter = '';
+    let currentPage = 1;
+    let currentSearch = '';
+    let currentMediaId = null;
 
     const uploadZone = $('#uploadZone');
     const fileInput = $('#fileInput');
-    const uploadProgress = $('#uploadProgress');
+    const uploadQueue = $('#uploadQueue');
 
-    uploadZone.on('click', function() { fileInput.click(); });
-
-    uploadZone.on('dragover dragenter', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        uploadZone.addClass('drag-over');
-    });
-
-    uploadZone.on('dragleave dragend', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        uploadZone.removeClass('drag-over');
-    });
-
-    uploadZone.on('drop', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        uploadZone.removeClass('drag-over');
-        const files = e.originalEvent.dataTransfer.files;
-        processFiles(files);
-    });
-
-    fileInput.on('change', function() {
-        processFiles(this.files);
-        this.value = '';
-    });
+    uploadZone.on('click', () => fileInput.click());
+    uploadZone.on('dragover dragenter', e => { e.preventDefault(); uploadZone.addClass('drag-over'); });
+    uploadZone.on('dragleave dragend drop', e => { e.preventDefault(); uploadZone.removeClass('drag-over'); });
+    uploadZone.on('drop', e => { processFiles(e.originalEvent.dataTransfer.files); });
+    fileInput.on('change', function() { processFiles(this.files); this.value = ''; });
 
     function processFiles(files) {
-        for (let file of files) {
+        const arr = Array.from(files);
+        arr.forEach(file => {
             if (file.size > 209715200) {
-                toastr.error(`Arquivo muito grande: ${file.name} (máx. 200MB)`);
-                continue;
+                showToast('error', `${file.name} excede 200MB`);
+                return;
             }
             startUpload(file);
-        }
+        });
     }
 
     function getFileType(file) {
         if (file.type.startsWith('image/')) return 'imagem';
         if (file.type.startsWith('video/')) return 'video';
-        if (file.type.startsWith('audio/')) return 'musica';
-        return null;
+        if (file.type.startsWith('audio/')) return 'audio';
+        return 'documento';
     }
 
-    function getFileIcon(tipo) {
-        return {
-            'imagem': '<i class="fas fa-image text-info"></i>',
-            'video': '<i class="fas fa-video text-success"></i>',
-            'musica': '<i class="fas fa-music text-warning"></i>',
-        }[tipo] || '<i class="fas fa-file text-muted"></i>';
+    function getTypeIcon(tipo) {
+        return { imagem: 'fa-image', video: 'fa-video', audio: 'fa-music', documento: 'fa-file' }[tipo] || 'fa-file';
+    }
+
+    function getTypeColor(tipo) {
+        return { imagem: '#22D3EE', video: '#3fb950', audio: '#d29922', documento: '#8b949e' }[tipo] || '#8b949e';
     }
 
     function formatSize(bytes) {
         if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / 1048576).toFixed(1) + ' MB';
+        if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+        if (bytes < 1073741824) return (bytes/1048576).toFixed(1) + ' MB';
+        return (bytes/1073741824).toFixed(2) + ' GB';
+    }
+
+    function formatSpeed(bytesPerSec) {
+        if (bytesPerSec > 1048576) return (bytesPerSec/1048576).toFixed(1) + ' MB/s';
+        return (bytesPerSec/1024).toFixed(0) + ' KB/s';
     }
 
     function formatTime(seconds) {
         if (seconds < 60) return Math.ceil(seconds) + 's';
-        const m = Math.floor(seconds / 60);
-        const s = Math.ceil(seconds % 60);
-        return `${m}m ${s}s`;
+        return Math.floor(seconds/60) + 'm ' + Math.ceil(seconds%60) + 's';
     }
 
-    function createPreview(file, tipo) {
-        return new Promise((resolve) => {
+    function createThumbPreview(file, tipo) {
+        return new Promise(resolve => {
             if (tipo === 'imagem') {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    resolve(`<img src="${e.target.result}" class="upload-preview-thumb" onclick="previewFile('${e.target.result}', 'imagem')">`);
-                };
+                reader.onload = e => resolve(`<img src="${e.target.result}" class="upload-queue-thumb">`);
                 reader.readAsDataURL(file);
-            } else if (tipo === 'video') {
-                const url = URL.createObjectURL(file);
-                resolve(`<div class="upload-preview-icon text-success" onclick="previewFile('${url}', 'video')"><i class="fas fa-play-circle fa-2x"></i></div>`);
-            } else if (tipo === 'musica') {
-                const url = URL.createObjectURL(file);
-                resolve(`<div class="upload-preview-icon text-warning" onclick="previewFile('${url}', 'musica')"><i class="fas fa-headphones fa-2x"></i></div>`);
+            } else {
+                const bg = getTypeColor(tipo);
+                resolve(`<div class="upload-queue-icon" style="background:${bg}20;color:${bg}"><i class="fas ${getTypeIcon(tipo)}"></i></div>`);
             }
         });
     }
 
     async function startUpload(file) {
         const tipo = getFileType(file);
-        if (!tipo) {
-            toastr.error(`Tipo de arquivo não suportado: ${file.name}`);
-            return;
-        }
+        const itemId = 'uq-' + Date.now() + '-' + Math.random().toString(36).substr(2,5);
+        const thumb = await createThumbPreview(file, tipo);
 
-        uploadsAtivos++;
-        $('#semArquivos').hide();
-        uploadProgress.show();
-
-        const previewHtml = await createPreview(file, tipo);
-        const itemId = 'upload-' + Date.now();
-
-        const itemHtml = `
-            <div class="upload-progress-item" id="${itemId}">
-                <div class="d-flex align-items-center mb-2">
-                    ${previewHtml}
-                    <div class="ml-3 flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong class="text-white text-truncate" style="max-width:300px">${file.name}</strong>
-                            <span class="upload-status uploading">Enviando...</span>
-                        </div>
-                        <div class="d-flex justify-content-between small text-muted mt-1">
-                            <span>${formatSize(file.size)}</span>
-                            <span class="time-remaining" id="${itemId}-time">calculando...</span>
-                        </div>
+        uploadQueue.show();
+        uploadQueue.prepend(`
+            <div class="upload-queue-item" id="${itemId}">
+                ${thumb}
+                <div class="upload-queue-info">
+                    <div class="upload-queue-name">${file.name}</div>
+                    <div class="upload-queue-meta">${formatSize(file.size)} &bull; ${tipo}</div>
+                    <div class="upload-queue-progress"><div class="upload-queue-bar" id="${itemId}-bar" style="width:0%"></div></div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted" id="${itemId}-pct">0%</small>
+                        <small class="text-muted" id="${itemId}-spd"></small>
                     </div>
                 </div>
-                <div class="progress">
-                    <div class="progress-bar" id="${itemId}-bar" style="width:0%"></div>
-                </div>
-                <div class="d-flex justify-content-between mt-1">
-                    <span class="small text-muted" id="${itemId}-percent">0%</span>
-                    <span class="small text-muted" id="${itemId}-speed"></span>
-                </div>
+                <span class="upload-queue-status status-uploading" id="${itemId}-status"><i class="fas fa-spinner fa-spin"></i></span>
             </div>
-        `;
-
-        uploadProgress.prepend(itemHtml);
+        `);
 
         const formData = new FormData();
         formData.append('arquivo', file);
-        formData.append('tipo', tipo);
         formData.append('_token', '{{ csrf_token() }}');
 
         let startTime = Date.now();
@@ -358,124 +497,254 @@ $(function() {
                 data: formData,
                 processData: false,
                 contentType: false,
-                xhr: function() {
+                xhr() {
                     const xhr = new XMLHttpRequest();
-                    xhr.upload.addEventListener('progress', function(e) {
+                    xhr.upload.addEventListener('progress', e => {
                         if (e.lengthComputable) {
-                            const percent = Math.round((e.loaded / e.total) * 100);
+                            const pct = Math.round((e.loaded/e.total)*100);
                             const now = Date.now();
-                            const elapsed = (now - startTime) / 1000;
-                            const loadDiff = e.loaded - (lastLoaded || 0);
-                            const timeDiff = (now - lastTime) / 1000;
-                            const speed = loadDiff / (timeDiff || 1) / 1024;
-                            const remaining = ((e.total - e.loaded) / (speed * 1024 || 1));
-                            const speedStr = speed > 1024 ? (speed / 1024).toFixed(1) + ' MB/s' : speed.toFixed(1) + ' KB/s';
+                            const speed = (e.loaded - lastLoaded) / ((now - lastTime)/1000 || 1);
+                            const remaining = (e.total - e.loaded) / (speed || 1);
 
-                            $(`#${itemId}-bar`).css('width', percent + '%');
-                            $(`#${itemId}-percent`).text(percent + '%');
-                            $(`#${itemId}-speed`).text(speedStr);
-                            $(`#${itemId}-time`).text(remaining > 0 ? formatTime(remaining) : 'finalizando...');
+                            $(`#${itemId}-bar`).css('width', pct + '%');
+                            $(`#${itemId}-pct`).text(pct + '%');
+                            $(`#${itemId}-spd`).text(formatSpeed(speed) + ' • ' + formatTime(remaining));
 
                             lastLoaded = e.loaded;
                             lastTime = now;
                         }
-                    }, false);
+                    });
                     return xhr;
                 }
             });
 
-            $(`#${itemId} .upload-status`).removeClass('uploading').addClass('success').text('Concluído');
+            $(`#${itemId}-status`).removeClass('status-uploading').addClass('status-success').html('<i class="fas fa-check"></i>');
             $(`#${itemId}-bar`).css('width', '100%');
-            $(`#${itemId}-time`).text('Concluído');
+            $(`#${itemId}-spd`).text('Concluído');
 
-            adicionarTabela(response, previewHtml, file);
-            atualizarContadores();
+            setTimeout(() => $(`#${itemId}`).fadeOut(300, function() { $(this).remove(); if (uploadQueue.children().length === 0) uploadQueue.hide(); }), 2000);
 
-            toastr.success(`${file.name} enviado com sucesso!`);
-        } catch (error) {
-            $(`#${itemId} .upload-status`).removeClass('uploading').addClass('error').text('Erro');
+            showToast('success', `${file.name} enviado!`);
+            loadMedia();
+        } catch(err) {
+            $(`#${itemId}-status`).removeClass('status-uploading').addClass('status-error').html('<i class="fas fa-times"></i>');
             $(`#${itemId}-bar`).css('width', '0%');
-            $(`#${itemId}-time`).text('Falhou');
-            toastr.error(`Erro ao enviar ${file.name}`);
-        } finally {
-            uploadsAtivos--;
-            if (uploadsAtivos === 0) {
-                setTimeout(function() {
-                    uploadProgress.find('.upload-progress-item').fadeOut(300, function() {
-                        $(this).remove();
-                        if (uploadProgress.children().length === 0) uploadProgress.hide();
-                    });
-                }, 3000);
-            }
+            $(`#${itemId}-spd`).text('Falhou');
+            showToast('error', `Erro ao enviar ${file.name}`);
         }
     }
 
-    function adicionarTabela(response, previewHtml, file) {
-        const tipoLabel = { 'imagem': 'Imagem', 'video': 'Vídeo', 'musica': 'Música' };
-        const data = new Date().toLocaleDateString('pt-BR');
-        const url = response.url;
-
-        const row = `
-            <tr data-url="${url}" data-tipo="${response.tipo}">
-                <td>${previewHtml}</td>
-                <td class="text-white">${response.nome}</td>
-                <td><span class="badge badge-${response.tipo === 'imagem' ? 'info' : response.tipo === 'video' ? 'success' : 'warning'}">${tipoLabel[response.tipo]}</span></td>
-                <td class="text-muted">${formatSize(response.tamanho)}</td>
-                <td class="text-muted">${data}</td>
-                <td>
-                    <button class="btn btn-sm btn-info" onclick="previewFile('${url}', '${response.tipo}')" title="Preview">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn-sm btn-secondary" onclick="copiarURL('${url}')" title="Copiar URL">
-                        <i class="fas fa-link"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-
-        $('#arquivosEnviados').append(row);
+    function loadMedia(page) {
+        page = page || 1;
+        currentPage = page;
+        $.get('{{ route("admin.uploads.list") }}', { page, tipo: currentFilter, busca: currentSearch }, function(data) {
+            renderMedia(data.data);
+            renderPagination(data);
+            updateStats();
+        });
     }
 
-    function atualizarContadores() {
-        $('.info-box-number').text('...');
-    }
+    function renderMedia(items) {
+        const grid = $('#mediaGrid');
+        grid.empty();
 
-    window.previewFile = function(url, tipo) {
-        const previewModal = $('#previewModal');
-        const previewBody = $('#previewBody');
-        const previewTitle = $('#previewTitle');
+        if (!items || items.length === 0) {
+            grid.html('<div class="media-empty"><i class="fas fa-folder-open fa-3x mb-3"></i><p>Nenhum arquivo encontrado</p></div>');
+            return;
+        }
 
-        previewTitle.text('Preview');
+        items.forEach(m => {
+            const isImage = m.tipo === 'imagem';
+            const isVideo = m.tipo === 'video';
+            const isAudio = m.tipo === 'audio';
 
-        if (tipo === 'imagem') {
-            previewBody.html(`<img src="${url}" class="img-fluid" style="max-height:70vh">`);
-        } else if (tipo === 'video') {
-            previewBody.html(`
-                <video controls class="w-100" style="max-height:70vh">
-                    <source src="${url}" type="video/mp4">
-                    Seu navegador não suporta vídeo.
-                </video>
-            `);
-        } else if (tipo === 'musica') {
-            previewBody.html(`
-                <div class="py-5">
-                    <i class="fas fa-headphones fa-5x text-warning mb-4"></i>
-                    <audio controls class="w-75">
-                        <source src="${url}" type="audio/mpeg">
-                        Seu navegador não suporta áudio.
-                    </audio>
+            let content = '';
+            if (isImage) {
+                content = `<img src="${m.url}" class="media-card-img" loading="lazy" alt="${m.nome_original}">`;
+            } else {
+                const icon = isVideo ? 'fa-play-circle' : isAudio ? 'fa-headphones' : 'fa-file';
+                const color = getTypeColor(m.tipo);
+                content = `<div class="media-card-icon" style="color:${color}"><i class="fas ${icon}"></i></div>`;
+            }
+
+            grid.append(`
+                <div class="media-card" data-id="${m.id}" data-url="${m.url}" data-tipo="${m.tipo}" data-nome="${m.nome_original}" data-tamanho="${m.tamanho_formatado}">
+                    <input type="checkbox" class="media-select" data-id="${m.id}">
+                    <span class="media-card-type type-${m.tipo}">${m.tipo}</span>
+                    ${content}
+                    <div class="media-card-overlay">
+                        <div class="media-card-name">${m.nome_original}</div>
+                        <div class="media-card-size">${m.tamanho_formatado}</div>
+                    </div>
+                    <div class="media-card-actions">
+                        <button class="btn btn-sm btn-outline-light btn-preview" title="Preview"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm btn-outline-info btn-copy" title="Copiar URL"><i class="fas fa-link"></i></button>
+                        <button class="btn btn-sm btn-outline-danger btn-delete" title="Excluir"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
             `);
+        });
+    }
+
+    function renderPagination(data) {
+        const pag = $('#mediaPagination');
+        pag.empty();
+        if (data.last_page <= 1) return;
+
+        let html = '<nav><ul class="pagination pagination-sm mb-0">';
+        if (data.current_page > 1)
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="${data.current_page-1}">&laquo;</a></li>`;
+
+        for (let i = 1; i <= data.last_page; i++) {
+            if (i === 1 || i === data.last_page || Math.abs(i - data.current_page) <= 2) {
+                html += `<li class="page-item ${i === data.current_page ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+            } else if (Math.abs(i - data.current_page) === 3) {
+                html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            }
         }
 
-        previewModal.modal('show');
-    };
+        if (data.current_page < data.last_page)
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="${data.current_page+1}">&raquo;</a></li>`;
 
-    window.copiarURL = function(url) {
-        navigator.clipboard.writeText(url).then(function() {
-            toastr.success('URL copiada!');
+        html += '</ul></nav>';
+        pag.html(html);
+    }
+
+    function updateStats() {
+        $.get('{{ route("admin.uploads.list") }}', { per_page: 1 }, function(data) {
+            const total = data.total;
+            $.get('{{ route("admin.uploads.list") }}', { tipo: 'imagem', per_page: 1 }, d => { $('#statImagens').text(d.total); });
+            $.get('{{ route("admin.uploads.list") }}', { tipo: 'video', per_page: 1 }, d => { $('#statVideos').text(d.total); });
+            $.get('{{ route("admin.uploads.list") }}', { tipo: 'audio', per_page: 1 }, d => { $('#statAudios').text(d.total); });
+            $.get('{{ route("admin.uploads.list") }}', { tipo: 'documento', per_page: 1 }, d => { $('#statDocs').text(d.total); });
         });
-    };
+    }
+
+    function showToast(type, msg) {
+        if (typeof toastr !== 'undefined') {
+            toastr[type](msg);
+        } else {
+            alert(msg);
+        }
+    }
+
+    function openPreview(id) {
+        currentMediaId = id;
+        const card = $(`.media-card[data-id="${id}"]`);
+        const url = card.data('url');
+        const tipo = card.data('tipo');
+        const nome = card.data('nome');
+        const tamanho = card.data('tamanho');
+
+        $('#previewTitle').text(nome);
+        $('#previewInfo').text(`${tipo.toUpperCase()} • ${tamanho}`);
+
+        let html = '';
+        if (tipo === 'imagem') {
+            html = `<img src="${url}" style="max-height:70vh;max-width:100%;margin:auto;display:block">`;
+        } else if (tipo === 'video') {
+            html = `<video controls autoplay style="max-height:70vh;max-width:100%;margin:auto;display:block"><source src="${url}"></video>`;
+        } else if (tipo === 'audio') {
+            html = `<div class="p-5"><i class="fas fa-headphones fa-5x mb-4" style="color:#d29922"></i><audio controls autoplay style="width:80%"><source src="${url}"></audio></div>`;
+        } else {
+            html = `<div class="p-5"><i class="fas fa-file fa-5x mb-4" style="color:#8b949e"></i><p class="text-white">Pré-visualização não disponível</p><a href="${url}" class="btn btn-outline-info mt-2" target="_blank"><i class="fas fa-download"></i> Baixar</a></div>`;
+        }
+
+        $('#previewBody').html(html);
+        $('#previewModal').modal('show');
+    }
+
+    function deleteMedia(id) {
+        if (!confirm('Excluir este arquivo permanentemente?')) return;
+        $.ajax({
+            url: `/admin/uploads/${id}`,
+            type: 'DELETE',
+            data: { _token: '{{ csrf_token() }}' },
+            success() {
+                showToast('success', 'Arquivo excluído');
+                $(`.media-card[data-id="${id}"]`).fadeOut(300, function() { $(this).remove(); });
+                $('#previewModal').modal('hide');
+                loadMedia(currentPage);
+            },
+            error() { showToast('error', 'Erro ao excluir'); }
+        });
+    }
+
+    function deleteSelected() {
+        const ids = [];
+        $('.media-select:checked').each(function() { ids.push($(this).data('id')); });
+        if (ids.length === 0) return;
+        if (!confirm(`Excluir ${ids.length} arquivo(s) permanentemente?`)) return;
+
+        $.ajax({
+            url: '{{ route("admin.uploads.batch-destroy") }}',
+            type: 'POST',
+            data: { ids, _token: '{{ csrf_token() }}' },
+            success() {
+                showToast('success', `${ids.length} arquivo(s) excluído(s)`);
+                loadMedia(currentPage);
+                $('.media-select').prop('checked', false);
+                updateSelectionCount();
+            },
+            error() { showToast('error', 'Erro ao excluir'); }
+        });
+    }
+
+    function updateSelectionCount() {
+        const count = $('.media-select:checked').length;
+        $('#countSelecionados').text(count);
+        $('#btnExcluirSelecionados').prop('disabled', count === 0);
+    }
+
+    $(document).on('click', '.filter-btn', function(e) {
+        e.preventDefault();
+        $('.filter-btn').removeClass('active');
+        $(this).addClass('active');
+        currentFilter = $(this).data('tipo');
+        loadMedia(1);
+    });
+
+    $(document).on('click', '.page-link', function(e) {
+        e.preventDefault();
+        loadMedia($(this).data('page'));
+    });
+
+    $('#btnBuscar').on('click', function() { currentSearch = $('#buscaMedia').val(); loadMedia(1); });
+    $('#buscaMedia').on('keypress', function(e) { if (e.which === 13) { currentSearch = $(this).val(); loadMedia(1); } });
+
+    $(document).on('click', '.media-card', function(e) {
+        if ($(e.target).is('input') || $(e.target).closest('.btn').length) return;
+        openPreview($(this).data('id'));
+    });
+
+    $(document).on('click', '.btn-preview', function(e) {
+        e.stopPropagation();
+        openPreview($(this).closest('.media-card').data('id'));
+    });
+
+    $(document).on('click', '.btn-copy', function(e) {
+        e.stopPropagation();
+        const url = $(this).closest('.media-card').data('url');
+        navigator.clipboard.writeText(url).then(() => showToast('success', 'URL copiada!'));
+    });
+
+    $(document).on('click', '.btn-delete', function(e) {
+        e.stopPropagation();
+        deleteMedia($(this).closest('.media-card').data('id'));
+    });
+
+    $(document).on('change', '.media-select', function() { updateSelectionCount(); });
+
+    $('#btnExcluirSelecionados').on('click', deleteSelected);
+
+    $('#btnCopiarUrlModal').on('click', function() {
+        const url = $(`.media-card[data-id="${currentMediaId}"]`).data('url');
+        navigator.clipboard.writeText(url).then(() => showToast('success', 'URL copiada!'));
+    });
+
+    $('#btnExcluirModal').on('click', function() { deleteMedia(currentMediaId); });
+
+    loadMedia(1);
 });
 </script>
 @stop
