@@ -1,17 +1,19 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-primary: #ff6b35;
-  --color-secondary: #e94560;
-  --color-accent: #00d2ff;
+  --color-primary: #BB9C55;
+  --color-secondary: #6F5D3B;
+  --color-accent: #BB9C55;
   --color-dark: #0a0a0a;
-  --color-dark-2: #1a1a2e;
-  --color-dark-3: #16213e;
-  --color-gold: #f0a500;
-  --color-neon-cyan: #00d2ff;
-  --color-neon-pink: #e94560;
-  --color-neon-purple: #9b59b6;
-  --color-neon-orange: #ff6b35;
+  --color-dark-2: #141414;
+  --color-dark-3: #1a1a1a;
+  --color-gold: #D4AF37;
+  --color-logo-gold: #BB9C55;
+  --color-logo-gold-light: #D8BF6F;
+  --color-neon-cyan: #22D3EE;
+  --color-neon-pink: #E94560;
+  --color-neon-purple: #A855F7;
+  --color-neon-orange: #BB9C55;
   --font-heading: "Orbitron", sans-serif;
   --font-body: "Inter", sans-serif;
 }
@@ -173,6 +175,12 @@
   justify-content: center;
   background: #0a0a0a;
   transition: opacity 0.6s ease, visibility 0.6s ease;
+  animation: preloader-fade 4s forwards;
+}
+
+@keyframes preloader-fade {
+  0%, 70% { opacity: 1; visibility: visible; }
+  100% { opacity: 0; visibility: hidden; pointer-events: none; }
 }
 
 #preloader.hidden {

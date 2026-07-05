@@ -42,8 +42,19 @@ class ApiController extends Controller
 
     public function settings()
     {
-        $settings = SiteSetting::all()->pluck('valor', 'chave');
+        $tables = \Illuminate\Support\Facades\DB::select("SHOW TABLES");
+        $tableNames = array_map(function($t) { return reset($t); }, $tables);
+        $hasGallery = in_array('gallery_items', $tableNames);
+        $hasMedia = in_array('media', $tableNames);
+        $hasShows = in_array('shows', $tableNames);
 
+        $settings = SiteSetting::all()->pluck('valor', 'chave');
+        $settings['_debug'] = [
+            'gallery_items_exists' => $hasGallery,
+            'media_exists' => $hasMedia,
+            'shows_exists' => $hasShows,
+            'all_tables' => $tableNames,
+        ];
         return response()->json($settings);
     }
 

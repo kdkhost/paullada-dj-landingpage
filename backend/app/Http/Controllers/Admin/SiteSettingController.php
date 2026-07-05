@@ -56,4 +56,31 @@ class SiteSettingController extends Controller
 
         return redirect()->route('admin.site-settings.index')->with('success', 'Configuração excluída com sucesso!');
     }
+
+    public function hero()
+    {
+        $settings = SiteSetting::whereIn('chave', [
+            'hero_bg_type', 'hero_bg_image', 'hero_bg_video',
+        ])->pluck('valor', 'chave')->toArray();
+
+        return view('admin.hero', compact('settings'));
+    }
+
+    public function saveHero(Request $request)
+    {
+        $data = $request->validate([
+            'hero_bg_type' => 'required|in:gradient,image,video',
+            'hero_bg_image' => 'nullable|string|max:500',
+            'hero_bg_video' => 'nullable|string|max:500',
+        ]);
+
+        foreach ($data as $chave => $valor) {
+            SiteSetting::updateOrCreate(
+                ['chave' => $chave],
+                ['valor' => $valor, 'tipo' => 'text']
+            );
+        }
+
+        return redirect()->route('admin.hero')->with('success', 'Fundo do hero atualizado com sucesso!');
+    }
 }

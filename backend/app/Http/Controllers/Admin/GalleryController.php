@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GalleryItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class GalleryController extends Controller
 {
@@ -26,19 +27,19 @@ class GalleryController extends Controller
             'tipo' => 'required|in:foto,video',
             'titulo' => 'required|string|max:255',
             'descricao' => 'nullable|string',
-            'arquivo' => 'nullable|image|max:5120',
-            'url_youtube' => 'nullable|url|max:500',
+            'arquivo' => 'nullable|string|max:500',
+            'url_youtube' => 'nullable|string|max:500',
             'ordem' => 'nullable|integer|min:0',
             'ativo' => 'nullable|boolean',
         ]);
 
-        if ($request->hasFile('arquivo')) {
-            $data['arquivo'] = $request->file('arquivo')->store('gallery', 'public');
-        }
-
-        $data['ativo'] = $request->has('ativo');
+        $data['ativo'] = $request->boolean('ativo', true);
 
         GalleryItem::create($data);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Item da galeria criado com sucesso!']);
+        }
 
         return redirect()->route('admin.gallery.index')->with('success', 'Item da galeria criado com sucesso!');
     }
@@ -54,32 +55,33 @@ class GalleryController extends Controller
             'tipo' => 'required|in:foto,video',
             'titulo' => 'required|string|max:255',
             'descricao' => 'nullable|string',
-            'arquivo' => 'nullable|image|max:5120',
-            'url_youtube' => 'nullable|url|max:500',
+            'arquivo' => 'nullable|string|max:500',
+            'url_youtube' => 'nullable|string|max:500',
             'ordem' => 'nullable|integer|min:0',
             'ativo' => 'nullable|boolean',
         ]);
 
-        if ($request->hasFile('arquivo')) {
-            if ($gallery->arquivo) {
-                Storage::disk('public')->delete($gallery->arquivo);
-            }
-            $data['arquivo'] = $request->file('arquivo')->store('gallery', 'public');
-        }
-
-        $data['ativo'] = $request->has('ativo');
+        $data['ativo'] = $request->boolean('ativo', true);
 
         $gallery->update($data);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Item da galeria atualizado com sucesso!']);
+        }
 
         return redirect()->route('admin.gallery.index')->with('success', 'Item da galeria atualizado com sucesso!');
     }
 
     public function destroy(GalleryItem $gallery)
     {
-        if ($gallery->arquivo) {
+        if ($gallery->arquivo && Storage::disk('public')->exists($gallery->arquivo)) {
             Storage::disk('public')->delete($gallery->arquivo);
         }
         $gallery->delete();
+
+        if (request()->ajax()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('admin.gallery.index')->with('success', 'Item da galeria excluído com sucesso!');
     }

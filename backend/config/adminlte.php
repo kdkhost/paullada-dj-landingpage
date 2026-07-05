@@ -137,6 +137,11 @@ return [
             'route' => 'admin.uploads.index',
         ],
         [
+            'text' => 'Fundo do Hero',
+            'icon' => 'fas fa-fw fa-image',
+            'route' => 'admin.hero',
+        ],
+        [
             'text' => 'Configuracoes do Site',
             'icon' => 'fas fa-fw fa-cog',
             'route' => 'admin.site-settings.index',

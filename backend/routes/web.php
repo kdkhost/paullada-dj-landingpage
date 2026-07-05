@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\SocialLinkController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\UploadController;
+use App\Http\Controllers\Api\UploadApiController;
 
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
@@ -21,4 +22,11 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::post('uploads/upload', [UploadController::class, 'upload'])->name('admin.uploads.upload');
     Route::post('uploads/batch-delete', [UploadController::class, 'batchDestroy'])->name('admin.uploads.batch-destroy');
     Route::delete('uploads/{media}', [UploadController::class, 'destroy'])->name('admin.uploads.destroy');
+    Route::get('hero', [SiteSettingController::class, 'hero'])->name('admin.hero');
+    Route::post('hero', [SiteSettingController::class, 'saveHero'])->name('admin.hero.save');
+});
+
+Route::middleware(['auth'])->prefix('api')->group(function () {
+    Route::post('upload', [UploadApiController::class, 'upload'])->name('api.upload');
+    Route::post('upload/delete', [UploadApiController::class, 'delete'])->name('api.upload.delete');
 });

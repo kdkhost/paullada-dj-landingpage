@@ -39,5 +39,6 @@ Thumbs.db
 /*.txt
 /*.html
 /*.css
+/*.js
 /cc*.php
 /seed.php
